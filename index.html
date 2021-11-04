@@ -1,0 +1,139 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Mean Absolute Error : 8056.869257621789\n"
+     ]
+    }
+   ],
+   "source": [
+    "import numpy as np # linear algebra\n",
+    "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from xgboost import XGBRegressor\n",
+    "from sklearn.metrics import mean_absolute_error\n",
+    "from sklearn.impute import SimpleImputer\n",
+    "imputer = SimpleImputer(missing_values=np.nan, strategy='mean')\n",
+    "\n",
+    "#read only part of data\n",
+    "data=pd.read_csv('/home/axe_rhitta/Historical Product Demand.csv',nrows=100000)\n",
+    "data.dropna(axis=0)\n",
+    "predictors=['Product_Code','Warehouse','Product_Category','Date']\n",
+    "X=data[predictors]\n",
+    "y=data.Order_Demand\n",
+    "train_X, val_X, train_y, val_y = train_test_split(X, y, random_state=1,test_size=0.1,train_size=0.5)\n",
+    "one_hot_encoding_val_data=pd.get_dummies(val_X)\n",
+    "one_hot_encoding_train_data=pd.get_dummies(train_X)\n",
+    "del val_X\n",
+    "del train_X\n",
+    "final_train, final_val = one_hot_encoding_train_data.align(one_hot_encoding_val_data,join='left',axis=1)\n",
+    "#final val and final train are X \n",
+    "del one_hot_encoding_val_data\n",
+    "del one_hot_encoding_train_data\n",
+    "\n",
+    "my_imputer = imputer\n",
+    "final_train = my_imputer.fit_transform(final_train)\n",
+    "final_val = my_imputer.transform(final_val)\n",
+    "#define model \n",
+    "my_model = XGBRegressor()\n",
+    "    \n",
+    "\n",
+    "# Add silent=True to avoid printing out updates with each cycle\n",
+    "my_model.fit(final_train, train_y, verbose=False)\n",
+    "\n",
+    "# make predictions\n",
+    "predictions = my_model.predict(final_val)\n",
+    "del final_val\n",
+    "print(\"Mean Absolute Error : \" + str(mean_absolute_error(predictions, val_y)))\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0         100\n",
+      "1         500\n",
+      "2         500\n",
+      "3         500\n",
+      "4         500\n",
+      "         ... \n",
+      "99995     100\n",
+      "99996     400\n",
+      "99997     100\n",
+      "99998     300\n",
+      "99999    5000\n",
+      "Name: Order_Demand, Length: 100000, dtype: int64\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "predicted values are : [ 3706.671    4822.1997    360.7568  ... 31238.445     929.97284\n",
+      " 37339.766  ]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"predicted values are : \" + str(predictions))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
